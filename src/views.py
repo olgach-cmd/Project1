@@ -1,48 +1,30 @@
 from datetime import datetime
-import pandas as pd
-
-def greetings() -> str:
-    """
-    Функция возвращает приветствие в зависимости от текущего времени
-    06:00–11:59 — «Доброе утро»,
-    12:00–17:59 — «Добрый день»,
-    18:00–22:59 — «Добрый вечер»,
-    23:00–05:59 — «Доброй ночи»
-    """
-    current_time = datetime.now().hour
-    if 6 <= current_time < 12:
-        return "Доброе утро"
-    elif 12 <= current_time < 18:
-        return "Добрый день"
-    elif 18 <= current_time < 23:
-        return "Добрый вечер"
-    else:
-        return "Доброй ночи"
+from src.utils import parse_xlsx_file, parse_json_file, greetings, get_card_summary, get_top_transactions, \
+    get_exchange_rate, get_share_price
 
 
-def parse_xlsx_file(file_path: str) -> pd.DataFrame:
-    """
-    Функция принимает на вход путь до xlsx-файла и возвращает pandas.DataFrame
-    Если файл пустой или не найден, функция возвращает пустой DataFrame
-    """
-    try:
-        df = pd.read_excel(file_path)
-        df['Дата операции'] = pd.to_datetime(df['Дата операции'], format='%d.%m.%Y %H:%M:%S')
-        df['Дата платежа'] = pd.to_datetime(df['Дата платежа'], format='%d.%m.%Y')
-        return df
-    except (FileNotFoundError, pd.errors.EmptyDataError):
-        return pd.DataFrame()
+def home_page(date: str) -> dict:
 
-def get_card_summary(df: pd.DataFrame, date_from: datetime, date_to: datetime) -> pd.DataFrame:
-    """
-    Функция возвращает сводку по картам за период: последние 4 цифры карты, общая сумма расходов и кэшбэк
-    :param df:DataFrame с транзакциями
-    :param date_from: начальная дата (str, формат 'YYYY-MM-DD HH:MM')
-    :param date_to: конечная дата (str, формат 'YYYY-MM-DD HH:MM')
-    :return: DataFrame с колонками [Номер карты, Валюта, Сумма расходов, Кэшбэк]
-    """
-    filter_date_df = df[df["Дата операции"].between(date_from, date_to)]
-    result = filter_date_df.groupby(['Номер карты']).agg({
-        'Сумма операции': 'sum', 'Кэшбэк': 'sum'
-    }).abs().reset_index()
+    # диапазон дат для вычисления расходов
+    to_dt = datetime.fromisoformat(date)
+    from_dt = datetime(to_dt.year, to_dt.month, 1)
+
+    # выгрузка DataFrame
+    df = parse_xlsx_file("../data/operations.xlsx", from_dt,to_dt)
+
+    # выгрузка пользовательских настроек
+    user_settings = parse_json_file("../user_settings.json")
+
+    # get_exchange_rate(user_settings.get("user_currencies"))
+
+    result = {
+        "greeting": greetings(),
+        "cards": get_card_summary(df),
+        "top_transactions": get_top_transactions(df),
+        "currency_rates": get_exchange_rate(user_settings.get("user_currencies")),
+        "stock_prices": get_share_price(user_settings.get("user_stocks"))
+    }
     return result
+
+if __name__ == "__main__":
+    home_page("2021-12-04 01:20")
