@@ -1,9 +1,9 @@
 from datetime import datetime
 from src.utils import parse_xlsx_file, parse_json_file, greetings, get_card_summary, get_top_transactions, \
     get_exchange_rate, get_share_price
+import json
 
-
-def home_page(date: str) -> dict:
+def home_page(date: str) -> str:
 
     # диапазон дат для вычисления расходов
     to_dt = datetime.fromisoformat(date)
@@ -11,6 +11,7 @@ def home_page(date: str) -> dict:
 
     # выгрузка DataFrame
     df = parse_xlsx_file("../data/operations.xlsx", from_dt,to_dt)
+    # filter_date_df = df_filter_by_date(df)
 
     # выгрузка пользовательских настроек
     user_settings = parse_json_file("../user_settings.json")
@@ -24,7 +25,10 @@ def home_page(date: str) -> dict:
         "currency_rates": get_exchange_rate(user_settings.get("user_currencies")),
         "stock_prices": get_share_price(user_settings.get("user_stocks"))
     }
-    return result
+    json_result = json.dumps(result, indent=4, ensure_ascii=False)
+    return json_result
 
-if __name__ == "__main__":
-    home_page("2021-12-04 01:20")
+
+
+
+

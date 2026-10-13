@@ -33,18 +33,17 @@ def parse_xlsx_file(file_path: str, date_from: datetime, date_to: datetime) -> p
     """
     Функция принимает на вход путь до xlsx-файла и возвращает pandas.DataFrame и диапазон дат
     Если файл пустой или не найден, функция возвращает пустой DataFrame
-    :param file_path: путь к файлу
-    :param date_from: начальная дата (str, формат 'YYYY-MM-DD HH:MM')
-    :param date_to: конечная дата (str, формат 'YYYY-MM-DD HH:MM')
+    :param file_path: путь к файлу (str)
+    :param date_from: начальная дата (datetime)
+    :param date_to: конечная дата (datetime)
     :return: DataFrame
     """
     try:
         df = pd.read_excel(file_path)
         df['Дата операции'] = pd.to_datetime(df['Дата операции'], format='%d.%m.%Y %H:%M:%S')
-        df['Дата платежа'] = pd.to_datetime(df['Дата платежа'], format='%d.%m.%Y')
         filter_date_df = df[df["Дата операции"].between(date_from, date_to)]
         return filter_date_df
-    except (FileNotFoundError, pd.errors.EmptyDataError):
+    except (FileNotFoundError, pd.errors.EmptyDataError, ValueError, TypeError):
         return pd.DataFrame()
 
 
@@ -97,7 +96,7 @@ def parse_json_file(file_path: str) -> dict:
         with open(file_path, "r", encoding="utf-8") as file:
             data = json.load(file)
         return data
-    except (json.decoder.JSONDecodeError, FileNotFoundError) as ex:
+    except (json.decoder.JSONDecodeError, FileNotFoundError, UnicodeDecodeError, OSError) as ex:
         return {}
 
 
@@ -148,3 +147,6 @@ def get_share_price (user_stocks: list) -> list[dict]:
             return []
     except (TypeError, KeyError, requests.exceptions.JSONDecodeError, requests.exceptions.ConnectionError):
         return[]
+
+
+
