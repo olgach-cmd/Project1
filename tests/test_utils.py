@@ -1,12 +1,14 @@
 import tempfile
-from unittest.mock import patch
+from unittest.mock import patch, MagicMock
 from datetime import datetime
 import pandas as pd
 import os
 import pytest
 
-from src.utils import greetings, parse_xlsx_file, get_card_summary, get_top_transactions, parse_json_file
+from src.utils import greetings, parse_xlsx_file, get_card_summary, get_top_transactions, parse_json_file, \
+    get_exchange_rate, get_share_price
 
+import requests
 
 @pytest.fixture
 def valid_xlsx_file():
@@ -135,3 +137,76 @@ def test_parse_json_file(file_path, expected):
 
 
 # тесты get_exchange_rate
+@patch("src.utils.requests.get")
+def test_get_exchange_rate(moсk_api_result):
+    moсk_api_result.return_value.json.return_value = {
+        'success': True,
+        'timestamp': 1792007346,
+        'base': 'RUB',
+        'date': '2026-10-14',
+        'rates': {'USD': 0.011958, 'EUR': 0.01072}
+    }
+    assert get_exchange_rate(["USD", "EUR"]) == [{'currency': 'USD', 'rate': 83.63}, {'currency': 'EUR', 'rate': 93.28}]
+    moсk_api_result.assert_called_once_with("https://api.apilayer.com/exchangerates_data/latest",
+                                            headers = {"apikey": os.getenv("API_KEY_CURRENCY")},
+                                            params = {"symbols": "USD,EUR", "base": "RUB"})
+
+
+def test_get_exchange_rate_incorrect_list():
+    assert get_exchange_rate([]) == []
+    assert get_exchange_rate(None) == []
+    assert get_exchange_rate(235) == []
+    assert get_exchange_rate(["USD", 4354]) == []
+
+
+@patch("src.utils.requests.get")
+def test_get_exchange_rate_err_jsondecode(mock_get):
+    mock_get.return_value.json.side_effect = requests.exceptions.JSONDecodeError(
+        "Expecting value", "fake_response_text", 0
+    )
+    assert get_exchange_rate(["USD", "EUR"]) == []
+
+
+@patch("src.utils.requests.get")
+def test_get_exchange_rate_err_connection(mock_get):
+    mock_get.return_value.json.side_effect = requests.exceptions.ConnectionError()
+    assert get_exchange_rate(["USD", "EUR"]) == []
+
+
+# тесты get_share_price
+@patch("src.utils.requests.get")
+def test_get_share_price(mock_get):
+    mock_response_aapl = MagicMock()
+    mock_response_aapl.json.return_value = {"ticker": "AAPL", "name": "Apple Inc.", "price": 342.37, "exchange": "NASDAQ", "updated": 1793998800, "currency": "USD", "volume": 44703806, "previous_close": 344.17, "change": -1.8}
+
+    mock_response_googl = MagicMock()
+    mock_response_googl.json.return_value = {"ticker": "AMZN", "name": "Amazon.com, Inc.", "price": 259.3, "exchange": "NASDAQ", "updated": 1793998800, "currency": "USD", "volume": 42571534, "previous_close": 260.21, "change": -0.91}
+
+    mock_get.side_effect = [mock_response_aapl, mock_response_googl]
+
+    result = get_share_price(["AAPL", "AMZN"])
+
+    assert result == [
+        {"stock": "AAPL", "price": 342.37},
+        {"stock": "AMZN", "price": 259.3}
+    ]
+    assert mock_get.call_count == 2
+
+def test_get_share_price_incorrect_list():
+    assert get_share_price([]) == []
+    assert get_share_price(None) == []
+    assert get_share_price(235) == []
+    assert get_share_price(["AAPL", 4354]) == []
+
+@patch("src.utils.requests.get")
+def test_get_share_price_err_jsondecode(mock_get):
+    mock_get.return_value.json.side_effect = requests.exceptions.JSONDecodeError(
+        "Expecting value", "fake_response_text", 0
+    )
+    assert get_share_price(["AAPL", "AMZN"]) == []
+
+
+@patch("src.utils.requests.get")
+def test_get_share_price_err_connection(mock_get):
+    mock_get.return_value.json.side_effect = requests.exceptions.ConnectionError()
+    assert get_share_price(["AAPL", "AMZN"]) == []

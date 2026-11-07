@@ -23,3 +23,20 @@ dev = [
     "pytest (>=9.1.1,<10.0.0)",
     "pytest-cov (>=7.1.0,<8.0.0)"
 ]
+lint = [
+    "flake8 (>=7.5.0,<8.0.0)",
+    "black (>=26.10.1,<27.0.0)",
+    "isort (>=9.0.2,<10.0.0)"
+]
+
+[tool.black]
+line-length = 119
+
+exclude = '''
+  /(
+    \.venv
+  )/
+'''
+
+[tool.isort]
+line_length = 119

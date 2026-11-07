@@ -107,20 +107,24 @@ def get_exchange_rate(user_currencies: list) -> list[dict]:
     Функция выводи курс заданных валют к рублю, если валюта не задана или задана некорректно возвращается пустой список
     """
     try:
-        user_currencies_str = ",".join(user_currencies)
-        url = "https://api.apilayer.com/exchangerates_data/latest"
-        params = {"symbols": user_currencies_str, "base": "RUB"}
-        api_key = os.getenv("API_KEY_CURRENCY")
-        headers = {"apikey": api_key}
+        if user_currencies:
+            user_currencies_str = ",".join(user_currencies)
+            url = "https://api.apilayer.com/exchangerates_data/latest"
+            params = {"symbols": user_currencies_str, "base": "RUB"}
+            api_key = os.getenv("API_KEY_CURRENCY")
+            headers = {"apikey": api_key}
 
-        result_api = requests.get(url, headers=headers, params=params).json()
-        # print("Статус код:", result_api.status_code)
-        # print("Тело ответа:", result_api.text[:500])
-        rates = result_api.get("rates")
-        return [{
-                "currency" : currency,
-                "rate" : round(1/rates[currency],2)
-            } for currency in user_currencies]
+            result_api = requests.get(url, headers=headers, params=params).json()
+            # print("Статус код:", result_api.status_code)
+            # print("Тело ответа:", result_api.text[:500])
+            # print(result_api)
+            rates = result_api.get("rates")
+            return [{
+                    "currency" : currency,
+                    "rate" : round(1/rates[currency],2)
+                } for currency in user_currencies]
+        else:
+            return []
     except (TypeError, KeyError, requests.exceptions.JSONDecodeError, requests.exceptions.ConnectionError):
         return []
 
@@ -147,6 +151,5 @@ def get_share_price (user_stocks: list) -> list[dict]:
             return []
     except (TypeError, KeyError, requests.exceptions.JSONDecodeError, requests.exceptions.ConnectionError):
         return[]
-
 
 
