@@ -16,12 +16,10 @@ def investment_bank(month: str, transactions: list[dict[str, any]], limit: int) 
             # дополнительно проверяю, что month переводиться в datetime (если нет, уйдет в except)
             datetime.strptime(month, "%Y-%m")
 
-            summ = 0
-            for transaction in transactions:
-                if transaction.get("date") and transaction.get("amount") and transaction["date"].startswith(month):
-                    summ += limit - round(transaction.get("amount") % limit,2)
+            month_transactions = [transaction for transaction in transactions if transaction.get("date") and transaction.get("amount") and transaction["date"].startswith(month)]
+            postponed = map(lambda x: limit - round(x.get("amount") % limit,2),month_transactions)
 
-            return round(summ,2)
+            return round(sum(postponed),2)
         else:
             return 0
 
