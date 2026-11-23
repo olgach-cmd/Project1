@@ -5,7 +5,7 @@ import pandas as pd
 import os
 import pytest
 
-from src.utils import greetings, parse_xlsx_file, get_card_summary, get_top_transactions, parse_json_file, \
+from src.utils import greetings, parse_xlsx_file_to_dt, get_card_summary, get_top_transactions, parse_json_file, \
     get_exchange_rate, get_share_price
 
 import requests
@@ -41,7 +41,7 @@ def test_greetings(mock_datetime,hour, expected):
     assert greetings() == expected
 
 
-# тесты parse_xlsx_file
+# тесты parse_xlsx_file_to_dt
 @pytest.mark.parametrize(
     "date_from, date_to, expected",
     [
@@ -64,9 +64,9 @@ def test_greetings(mock_datetime,hour, expected):
          })),
     ]
 )
-def test_parse_xlsx(date_from, date_to, expected):
+def test_parse_xlsx_to_dt(date_from, date_to, expected):
     """Тестирование корректной работы"""
-    pd.testing.assert_frame_equal(parse_xlsx_file("data/operations.xlsx", date_from, date_to)[['Дата операции', 'Сумма операции', 'Категория']].reset_index(drop=True), expected, check_like=True
+    pd.testing.assert_frame_equal(parse_xlsx_file_to_dt("data/operations.xlsx", date_from, date_to)[['Дата операции', 'Сумма операции', 'Категория']].reset_index(drop=True), expected, check_like=True
 )
 
 @pytest.mark.parametrize(
@@ -80,18 +80,18 @@ def test_parse_xlsx(date_from, date_to, expected):
 ])
 def test_parse_xlsx_err(file_path, date_from, date_to):
     """Некорректные файлу и неверные типы данных"""
-    result_df = parse_xlsx_file(file_path, date_from, date_to)
+    result_df = parse_xlsx_file_to_dt(file_path, date_from, date_to)
     assert result_df.empty
 
 # тесты get_card_summary
 @pytest.mark.parametrize(
     "df, expected", [
-        (parse_xlsx_file("data/operations.xlsx",
+        (parse_xlsx_file_to_dt("data/operations.xlsx",
                          datetime.fromisoformat("2021-10-06 16:31"),
                          datetime.fromisoformat("2021-10-06 20:31")),
          [{"last_digits": "*4556", "total_spent": 3000.00, "cashback": 0},
           {"last_digits": "*7197", "total_spent": 254.82, "cashback": 0}]),
-        (parse_xlsx_file("data/operations.xlsx",
+        (parse_xlsx_file_to_dt("data/operations.xlsx",
                          datetime.fromisoformat("2021-09-25 12:36"),
                          datetime.fromisoformat("2021-09-25 20:00")),
          [{"last_digits": "*4556", "total_spent": 8798, "cashback": 439},
@@ -106,7 +106,7 @@ def test_get_card_summary(df, expected):
 # тесты get_top_transactions
 @pytest.mark.parametrize(
     "df, expected", [
-        (parse_xlsx_file("data/operations.xlsx",
+        (parse_xlsx_file_to_dt("data/operations.xlsx",
                          datetime.fromisoformat("2021-12-01 01:20"),
                          datetime.fromisoformat("2021-12-04 01:20")),
          [{"date": "02.12.2021", "amount": -5510.8, "category": "Каршеринг", "description": "Ситидрайв"},

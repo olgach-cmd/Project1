@@ -29,7 +29,7 @@ def greetings() -> str:
         return "Доброй ночи"
 
 
-def parse_xlsx_file(file_path: str, date_from: datetime, date_to: datetime) -> pd.DataFrame:
+def parse_xlsx_file_to_dt(file_path: str, date_from: datetime, date_to: datetime) -> pd.DataFrame:
     """
     Функция принимает на вход путь до xlsx-файла и возвращает pandas.DataFrame и диапазон дат
     Если файл пустой или не найден, функция возвращает пустой DataFrame
@@ -71,8 +71,6 @@ def get_card_summary(df: pd.DataFrame) -> list[dict]:
 def get_top_transactions(df: pd.DataFrame) -> list[dict]:
     """
     Функция выводит Топ-5 транзакций по сумме платежа.
-    :param df:
-    :return:
     """
     df_subset = df[['Дата операции', 'Сумма операции', 'Категория', 'Описание']].sort_values(by='Сумма операции').head()
     df_subset['Дата операции'] = df_subset['Дата операции'].dt.strftime('%d.%m.%Y')
@@ -89,8 +87,6 @@ def get_top_transactions(df: pd.DataFrame) -> list[dict]:
 def parse_json_file(file_path: str) -> dict:
     """
     Функция принимает на вход путь до JSON-файла и возвращает список словарей с пользовательскими настройками
-    :param file_path:
-    :return:
     """
     try:
         with open(file_path, "r", encoding="utf-8") as file:
@@ -153,3 +149,16 @@ def get_share_price (user_stocks: list) -> list[dict]:
         return[]
 
 
+# def parse_xlsx_file(file_path: str) -> pd.DataFrame:
+#     """
+#     Функция принимает на вход путь до xlsx-файла и возвращает pandas.DataFrame
+#     Если файл пустой или не найден, функция возвращает пустой DataFrame
+#     :param file_path: путь к файлу (str)
+#     :return: DataFrame
+#     """
+#     try:
+#         df = pd.read_excel(file_path)
+#         df['Дата операции'] = pd.to_datetime(df['Дата операции'], format='%d.%m.%Y %H:%M:%S')
+#         return df
+#     except (FileNotFoundError, pd.errors.EmptyDataError, ValueError, TypeError):
+#         return pd.DataFrame()

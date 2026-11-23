@@ -1,5 +1,5 @@
 from datetime import datetime
-from src.utils import parse_xlsx_file, parse_json_file, greetings, get_card_summary, get_top_transactions, \
+from src.utils import parse_xlsx_file_to_dt, parse_json_file, greetings, get_card_summary, get_top_transactions, \
     get_exchange_rate, get_share_price
 import json
 
@@ -10,7 +10,7 @@ def home_page(date: str) -> str:
     from_dt = datetime(to_dt.year, to_dt.month, 1)
 
     # выгрузка DataFrame
-    df = parse_xlsx_file("../data/operations.xlsx", from_dt,to_dt)
+    df = parse_xlsx_file_to_dt("../data/operations.xlsx", from_dt,to_dt)
     # filter_date_df = df_filter_by_date(df)
 
     # выгрузка пользовательских настроек
