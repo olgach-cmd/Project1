@@ -12,20 +12,20 @@ def investment_bank(month: str, transactions: list[dict[str, any]], limit: int) 
     :return: сумма, которую удалось бы отложить в «Инвесткопилку»
     """
     try:
-        if len(month) == 7 and month[4] == '-' and limit > 0:
+        if len(month) == 7 and month[4] == "-" and limit > 0:
             # дополнительно проверяю, что month переводиться в datetime (если нет, уйдет в except)
             datetime.strptime(month, "%Y-%m")
 
-            month_transactions = [transaction for transaction in transactions if transaction.get("date") and transaction.get("amount") and transaction["date"].startswith(month)]
-            postponed = map(lambda x: limit - round(x.get("amount") % limit,2),month_transactions)
+            month_transactions = [
+                transaction
+                for transaction in transactions
+                if transaction.get("date") and transaction.get("amount") and transaction["date"].startswith(month)
+            ]
+            postponed = map(lambda x: limit - round(x.get("amount") % limit, 2), month_transactions)
 
-            return round(sum(postponed),2)
+            return round(sum(postponed), 2)
         else:
             return 0
 
     except ValueError, TypeError, AttributeError:
         return 0
-
-
-
-

@@ -1,7 +1,9 @@
-from datetime import datetime
-from src.utils import parse_xlsx_file_to_dt, parse_json_file, greetings, get_card_summary, get_top_transactions, \
-    get_exchange_rate, get_share_price
 import json
+from datetime import datetime
+
+from src.utils import (get_card_summary, get_exchange_rate, get_share_price, get_top_transactions, greetings,
+                       parse_json_file, parse_xlsx_file_to_dt)
+
 
 def home_page(date: str) -> str:
 
@@ -10,7 +12,7 @@ def home_page(date: str) -> str:
     from_dt = datetime(to_dt.year, to_dt.month, 1)
 
     # выгрузка DataFrame
-    df = parse_xlsx_file_to_dt("../data/operations.xlsx", from_dt,to_dt)
+    df = parse_xlsx_file_to_dt("../data/operations.xlsx", from_dt, to_dt)
     # filter_date_df = df_filter_by_date(df)
 
     # выгрузка пользовательских настроек
@@ -23,12 +25,7 @@ def home_page(date: str) -> str:
         "cards": get_card_summary(df),
         "top_transactions": get_top_transactions(df),
         "currency_rates": get_exchange_rate(user_settings.get("user_currencies")),
-        "stock_prices": get_share_price(user_settings.get("user_stocks"))
+        "stock_prices": get_share_price(user_settings.get("user_stocks")),
     }
     json_result = json.dumps(result, indent=4, ensure_ascii=False)
     return json_result
-
-
-
-
-

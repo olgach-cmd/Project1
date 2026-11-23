@@ -1,9 +1,8 @@
-from datetime import datetime
-import pandas as pd
-import os
-
 import json
+import os
+from datetime import datetime
 
+import pandas as pd
 import requests
 from dotenv import load_dotenv
 
@@ -40,10 +39,10 @@ def parse_xlsx_file_to_dt(file_path: str, date_from: datetime, date_to: datetime
     """
     try:
         df = pd.read_excel(file_path)
-        df['Дата операции'] = pd.to_datetime(df['Дата операции'], format='%d.%m.%Y %H:%M:%S')
+        df["Дата операции"] = pd.to_datetime(df["Дата операции"], format="%d.%m.%Y %H:%M:%S")
         filter_date_df = df[df["Дата операции"].between(date_from, date_to)]
         return filter_date_df
-    except (FileNotFoundError, pd.errors.EmptyDataError, ValueError, TypeError):
+    except FileNotFoundError, pd.errors.EmptyDataError, ValueError, TypeError:
         return pd.DataFrame()
 
 
@@ -58,28 +57,34 @@ def get_card_summary(df: pd.DataFrame) -> list[dict]:
         - cashback: кэшбэк
     """
 
-    summary = df[df['Сумма операции'] < 0].groupby(['Номер карты']).agg({
-        'Сумма операции': 'sum', 'Кэшбэк': 'sum'
-    }).abs().reset_index().rename(columns={
-        'Номер карты': 'last_digits',
-        'Сумма операции': 'total_spent',
-        'Кэшбэк': 'cashback'
-    })
+    summary = (
+        df[df["Сумма операции"] < 0]
+        .groupby(["Номер карты"])
+        .agg({"Сумма операции": "sum", "Кэшбэк": "sum"})
+        .abs()
+        .reset_index()
+        .rename(columns={"Номер карты": "last_digits", "Сумма операции": "total_spent", "Кэшбэк": "cashback"})
+    )
     summary_dic = summary.to_dict(orient="records")
     return summary_dic
+
 
 def get_top_transactions(df: pd.DataFrame) -> list[dict]:
     """
     Функция выводит Топ-5 транзакций по сумме платежа.
     """
-    df_subset = df[['Дата операции', 'Сумма операции', 'Категория', 'Описание']].sort_values(by='Сумма операции').head()
-    df_subset['Дата операции'] = df_subset['Дата операции'].dt.strftime('%d.%m.%Y')
-    df_subset = df_subset.rename(columns={
-        'Дата операции':'date',
-        'Сумма операции': 'amount',
-        'Категория':'category',
-        'Описание':'description'
-    })
+    df_subset = (
+        df[["Дата операции", "Сумма операции", "Категория", "Описание"]].sort_values(by="Сумма операции").head()
+    )
+    df_subset["Дата операции"] = df_subset["Дата операции"].dt.strftime("%d.%m.%Y")
+    df_subset = df_subset.rename(
+        columns={
+            "Дата операции": "date",
+            "Сумма операции": "amount",
+            "Категория": "category",
+            "Описание": "description",
+        }
+    )
     df_subset_dic = df_subset.to_dict(orient="records")
     return df_subset_dic
 
@@ -92,10 +97,8 @@ def parse_json_file(file_path: str) -> dict:
         with open(file_path, "r", encoding="utf-8") as file:
             data = json.load(file)
         return data
-    except (json.decoder.JSONDecodeError, FileNotFoundError, UnicodeDecodeError, OSError) as ex:
+    except (json.decoder.JSONDecodeError, FileNotFoundError, UnicodeDecodeError, OSError):
         return {}
-
-
 
 
 def get_exchange_rate(user_currencies: list) -> list[dict]:
@@ -115,17 +118,14 @@ def get_exchange_rate(user_currencies: list) -> list[dict]:
             # print("Тело ответа:", result_api.text[:500])
             # print(result_api)
             rates = result_api.get("rates")
-            return [{
-                    "currency" : currency,
-                    "rate" : round(1/rates[currency],2)
-                } for currency in user_currencies]
+            return [{"currency": currency, "rate": round(1 / rates[currency], 2)} for currency in user_currencies]
         else:
             return []
-    except (TypeError, KeyError, requests.exceptions.JSONDecodeError, requests.exceptions.ConnectionError):
+    except TypeError, KeyError, requests.exceptions.JSONDecodeError, requests.exceptions.ConnectionError:
         return []
 
 
-def get_share_price (user_stocks: list) -> list[dict]:
+def get_share_price(user_stocks: list) -> list[dict]:
     """
     Функция выводит стоимость заданных акций, если акция не задана или задана некорректно возвращается пустой список
     """
@@ -138,15 +138,12 @@ def get_share_price (user_stocks: list) -> list[dict]:
             for stock in user_stocks:
                 params = {"ticker": stock}
                 share_price_api = requests.get(url, headers=headers, params=params).json()
-                result.append({
-                    "stock": share_price_api["ticker"],
-                    "price": share_price_api["price"]
-                })
+                result.append({"stock": share_price_api["ticker"], "price": share_price_api["price"]})
             return result
         else:
             return []
-    except (TypeError, KeyError, requests.exceptions.JSONDecodeError, requests.exceptions.ConnectionError):
-        return[]
+    except TypeError, KeyError, requests.exceptions.JSONDecodeError, requests.exceptions.ConnectionError:
+        return []
 
 
 # def parse_xlsx_file(file_path: str) -> pd.DataFrame:
